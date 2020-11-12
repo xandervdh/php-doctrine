@@ -37,6 +37,11 @@ class Student
      */
     private $address;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=teacher::class, inversedBy="students")
+     */
+    private $teacher;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -86,6 +91,18 @@ class Student
     public function setAddress(string $address): self
     {
         $this->address = $address;
+
+        return $this;
+    }
+
+    public function getTeacher(): ?teacher
+    {
+        return $this->teacher;
+    }
+
+    public function setTeacher(?teacher $teacher): self
+    {
+        $this->teacher = $teacher;
 
         return $this;
     }
