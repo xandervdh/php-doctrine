@@ -32,12 +32,6 @@ class RestController extends AbstractFOSRestController
      */
     public function createStudents(Request $request): response
     {
-        $repository = $this->getDoctrine()->getRepository(Student::class);
-        $teachers = $repository->findAll();
-
-        $serializer = SerializerBuilder::create()->build();
-        $jsonContent = $serializer->serialize($teachers, 'json');
-
         $form = $this->createFormBuilder(null, [
             //'action' => '/students',
             'method' => 'PUT',
@@ -72,14 +66,35 @@ class RestController extends AbstractFOSRestController
 
             $message = new Response('Saved new student with id '.$student->getId());
 
+            $repository = $this->getDoctrine()->getRepository(Student::class);
+            $students = $repository->findAll();
+            if (empty($students)){
+                $message = 'no students found';
+            } else {
+                $message = '';
+            }
+
+            $serializer = SerializerBuilder::create()->build();
+            $jsonContent = $serializer->serialize($students, 'json');
+
             return $this->render('rest/index.html.twig', [
                 'message' => $message,
                 'form' => $form->createView(),
                 'json' => $jsonContent,
             ]);
         }
+        $repository = $this->getDoctrine()->getRepository(Student::class);
+        $students = $repository->findAll();
+        if (empty($students)){
+            $message = 'no students found';
+        } else {
+            $message = '';
+        }
+
+        $serializer = SerializerBuilder::create()->build();
+        $jsonContent = $serializer->serialize($students, 'json');
         return $this->render('rest/index.html.twig', [
-            'message' => 'create student',
+            'message' => $message,
             'form' => $form->createView(),
             'json' => $jsonContent,
         ]);
@@ -90,12 +105,6 @@ class RestController extends AbstractFOSRestController
      */
     public function teachers(): response
     {
-        $repository = $this->getDoctrine()->getRepository(Teacher::class);
-        $teachers = $repository->findAll();
-
-        $serializer = SerializerBuilder::create()->build();
-        $jsonContent = $serializer->serialize($teachers, 'json');
-
         $form = $this->createFormBuilder(null, [
             //'action' => '/students',
             'method' => 'PUT',
@@ -125,14 +134,34 @@ class RestController extends AbstractFOSRestController
 
             $message = new Response('Saved new teacher with id '.$teacher->getId());
 
+            $repository = $this->getDoctrine()->getRepository(Teacher::class);
+            $teachers = $repository->findAll();
+            if (empty($teachers)){
+                $message = 'no teachers found';
+            } else {
+                $message = '';
+            }
+
+            $serializer = SerializerBuilder::create()->build();
+            $jsonContent = $serializer->serialize($teachers, 'json');
             return $this->render('rest/index.html.twig', [
                 'message' => $message,
                 'form' => $form->createView(),
                 'json' => $jsonContent,
             ]);
         }
+        $repository = $this->getDoctrine()->getRepository(Teacher::class);
+        $teachers = $repository->findAll();
+        if (empty($teachers)){
+            $message = 'no teachers found';
+        } else {
+            $message = '';
+        }
+
+        $serializer = SerializerBuilder::create()->build();
+        $jsonContent = $serializer->serialize($teachers, 'json');
         return $this->render('rest/index.html.twig', [
-            'message' => 'create teacher',
+            'message' => $message,
             'form' => $form->createView(),
             'json' => $jsonContent,
         ]);
