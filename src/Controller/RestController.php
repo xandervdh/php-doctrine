@@ -289,4 +289,49 @@ class RestController extends AbstractFOSRestController
             'json' => $jsonContent,
         ]);
     }
+
+    /**
+     * @Route("/students/delete/{id}", name="deleteStudent")
+     */
+    public function deleteStudent($id)
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $student = $entityManager->getRepository(Student::class)->find($id);
+
+        if (!$student) {
+            throw $this->createNotFoundException(
+                'No student found for id '.$id
+            );
+        }
+
+        $entityManager->remove($student);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('students');
+    }
+
+    /**
+     * @Route("/teachers/delete/{id}", name="deleteTeacher")
+     */
+    public function deleteTeacher($id)
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $students = $entityManager->getRepository(Student::class)->findBy(['teacher' => $id]);
+        $teacher = $entityManager->getRepository(Teacher::class)->find($id);
+
+        if (!$teacher) {
+            throw $this->createNotFoundException(
+                'No student found for id '.$id
+            );
+        }
+
+        foreach ($students as $student){
+            $entityManager->remove($student);
+        }
+
+        $entityManager->remove($teacher);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('teachers');
+    }
 }
