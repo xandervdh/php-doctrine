@@ -141,11 +141,16 @@ class RestController extends AbstractFOSRestController
     /**
      * @Route("/students/{id}", name="studentProfile")
      */
-    public function studentProfile(Request $request)
+    public function studentProfile($id)
     {
-        $id = $request->attributes->get('id');
         $repository = $this->getDoctrine()->getRepository(Student::class);
         $student = $repository->find($id);
+
+        if (!$student) {
+            throw $this->createNotFoundException(
+                'No student found for id ' . $id
+            );
+        }
 
         $serializer = SerializerBuilder::create()->build();
         $jsonContent = $serializer->serialize($student, 'json');
@@ -157,19 +162,130 @@ class RestController extends AbstractFOSRestController
     }
 
     /**
-     * @Route("/teachers/{id}", name="studentProfile")
+     * @Route("/teachers/{id}", name="teacherProfile")
      */
-    public function teacherProfile(Request $request)
+    public function teacherProfile($id)
     {
-        $id = $request->attributes->get('id');
         $repository = $this->getDoctrine()->getRepository(Teacher::class);
         $teacher = $repository->find($id);
+
+        if (!$teacher) {
+            throw $this->createNotFoundException(
+                'No teacher found for id ' . $id
+            );
+        }
 
         $serializer = SerializerBuilder::create()->build();
         $jsonContent = $serializer->serialize($teacher, 'json');
 
         return $this->render('rest/profile.html.twig', [
             'message' => 'teachers',
+            'json' => $jsonContent,
+        ]);
+    }
+
+    /**
+     * @Route("/students/edit/{id}", name="editStudent")
+     */
+    public function updateStudent($id)
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $student = $entityManager->getRepository(Student::class)->find($id);
+        $address = $student->getAddress();
+        $serializer = SerializerBuilder::create()->build();
+        $jsonContent = $serializer->serialize($student, 'json');
+
+        if (!$student) {
+            throw $this->createNotFoundException(
+                'No student found for id '.$id
+            );
+        }
+
+        $form = $this->createFormBuilder(null, [
+            //'action' => '/students',
+            'method' => 'PUT',
+        ])
+            ->add('firstName', TextType::class, ['attr' => ['value' => $student->getFirstName()]])
+            ->add('lastName', TextType::class, ['attr' => ['value' => $student->getLastName()]])
+            ->add('email', TextType::class, ['attr' => ['value' => $student->getEmail()]])
+            ->add('street', TextType::class, ['attr' => ['value' => $address->getStreet()]])
+            ->add('houseNumber', TextType::class, ['attr' => ['value' => $address->getStreetNumber()]])
+            ->add('city', TextType::class, ['attr' => ['value' => $address->getCity()]])
+            ->add('zipCode', TextType::class, ['attr' => ['value' => $address->getZipcode()]])
+            ->add('Teacher', TextType::class, ['attr' => ['value' => $student->getTeacher()->getId()]])
+            ->getForm();
+
+        if (isset($_REQUEST['form'])) {
+            $data = $_REQUEST['form'];
+            $teacher = $this->teacherRepository->findOneById($data['Teacher']);
+            $entityManager = $this->getDoctrine()->getManager();
+
+
+            $student->setFirstName($data['firstName']);
+            $student->setLastName($data['lastName']);
+            $student->setEmail($data['email']);
+            $student->setAddress(new Address($data['street'], $data['houseNumber'], $data['city'], $data['zipCode']));
+            $student->setTeacher($teacher);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('studentProfile', [
+                'id' => $id,
+            ]);
+        }
+        return $this->render('rest/index.html.twig', [
+            'message' => 'update student',
+            'form' => $form->createView(),
+            'json' => $jsonContent,
+        ]);
+    }
+
+    /**
+     * @Route("/teachers/edit/{id}", name="editTeacher")
+     */
+    public function updateTeacher($id)
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $teacher = $entityManager->getRepository(Teacher::class)->find($id);
+        $address = $teacher->getAddress();
+        $serializer = SerializerBuilder::create()->build();
+        $jsonContent = $serializer->serialize($teacher, 'json');
+
+        if (!$teacher) {
+            throw $this->createNotFoundException(
+                'No student found for id '.$id
+            );
+        }
+
+        $form = $this->createFormBuilder(null, [
+            //'action' => '/students',
+            'method' => 'PUT',
+        ])
+            ->add('name', TextType::class, ['attr' => ['value' => $teacher->getName()]])
+            ->add('email', TextType::class, ['attr' => ['value' => $teacher->getEmail()]])
+            ->add('street', TextType::class, ['attr' => ['value' => $address->getStreet()]])
+            ->add('houseNumber', TextType::class, ['attr' => ['value' => $address->getStreetNumber()]])
+            ->add('city', TextType::class, ['attr' => ['value' => $address->getCity()]])
+            ->add('zipCode', TextType::class, ['attr' => ['value' => $address->getZipcode()]])
+            ->getForm();
+
+        if (isset($_REQUEST['form'])) {
+            $data = $_REQUEST['form'];
+            $entityManager = $this->getDoctrine()->getManager();
+
+
+            $teacher->setName($data['name']);
+            $teacher->setEmail($data['email']);
+            $teacher->setAddress(new Address($data['street'], $data['houseNumber'], $data['city'], $data['zipCode']));
+
+            $entityManager->flush();
+
+            return $this->redirectToRoute('teacherProfile', [
+                'id' => $id,
+            ]);
+        }
+        return $this->render('rest/index.html.twig', [
+            'message' => 'update student',
+            'form' => $form->createView(),
             'json' => $jsonContent,
         ]);
     }

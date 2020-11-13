@@ -75,7 +75,7 @@ class Teacher
         return $this;
     }
 
-    public function getAddress(): ?string
+    public function getAddress(): Address
     {
         return $this->address;
     }
